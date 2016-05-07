@@ -1,0 +1,99 @@
+   @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // TODO
+        
+        table.setEditable(true);
+        
+        TableColumn viewDate = new TableColumn("View Date");
+        viewDate.setMinWidth(100);
+        viewDate.setCellValueFactory(new PropertyValueFactory<Movie, String>("viewDate"));
+        
+        TableColumn movieTitle = new TableColumn("Title");
+        movieTitle.setMinWidth(300);
+        movieTitle.setCellValueFactory(new PropertyValueFactory<Movie, String>("movieTitle"));
+        
+        TableColumn releaseDate = new TableColumn("Release Date");
+        releaseDate.setMinWidth(100);
+        releaseDate.setCellValueFactory(new PropertyValueFactory<Movie, String>("releaseDate"));
+        
+        TableColumn director = new TableColumn("Director");
+        director.setMinWidth(300);
+        director.setCellValueFactory(new PropertyValueFactory<Movie, String>("director"));
+        
+        TableColumn runtime = new TableColumn("Runtime");
+        runtime.setMinWidth(100);
+        runtime.setCellValueFactory(new PropertyValueFactory<Movie, String>("runtime"));
+        
+        TableColumn genre = new TableColumn("Genre");
+        genre.setMinWidth(300);
+        genre.setCellValueFactory(new PropertyValueFactory<Movie, String>("genre"));
+        
+        table.setItems(data);
+        table.getColumns().addAll(viewDate, movieTitle, releaseDate, director, runtime, genre);
+        movieTableView.getChildren().addAll(table);
+        LoadDriver sqlConn = new LoadDriver("jdbc:mysql://localhost:3306/movies","root","password");
+        try{
+            System.setProperty("http.agent", "Chrome");
+            
+            
+            BufferedReader br = null;
+
+            try {
+
+                String sCurrentLine;
+
+                br = new BufferedReader(new FileReader("movies.txt"));
+
+                while ((sCurrentLine = br.readLine()) != null) {
+                    String[] currLine = sCurrentLine.split("\t");
+                    System.out.println(currLine[0]+currLine[1]);
+                    URL siteURL = new URL("http://www.imdb.com/title/tt"+currLine[1]);
+            
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(siteURL.openStream(), "UTF-8"));
+                    String fullString = "";
+                    for (String line; (line = reader.readLine()) != null;) {
+                        fullString+=line;
+                    } 
+                    //System.out.println(fullString);
+                    String movTitle = fullString.substring(fullString.indexOf("<title>"), fullString.indexOf("</title>"));
+                    String title = movTitle.substring(movTitle.indexOf("<h1 itemprop=\"name\"")+8, movTitle.lastIndexOf("(")-1);
+                    String relDate = movTitle.substring(movTitle.lastIndexOf(")")-4, movTitle.lastIndexOf(")"));
+                    fullString = fullString.substring(fullString.indexOf("<time itemprop=\"duration\" datetime=\""));
+                    String rnTm = fullString.substring(fullString.indexOf("itemprop=\"duration\" datetime=\"")+32, fullString.indexOf("M"));
+                    fullString = fullString.substring(fullString.indexOf("itemprop='url'><span class=\"itemprop\" itemprop=\"name\">"));
+                    String dir = fullString.substring(fullString.indexOf("<span class=\"itemprop\" itemprop=\"name\">")+39, fullString.indexOf("</span></a>"));
+
+                    String genresString = fullString.substring(fullString.indexOf("<h4 class=\"inline\">Genres:</h4>")+26);
+                    genresString = genresString.substring(0, genresString.indexOf("</div>"));
+                    genresString = genresString.replaceAll("\\<[^>]*>","");
+                    genresString = genresString.replaceAll("&nbsp;","");
+                    genresString = genresString.replaceAll(" ","");
+                    genresString = genresString.replaceAll("\\|",",");
+                    //String imdbID = "0055630";
+                    System.out.println(title+relDate+rnTm+dir);
+                    System.out.println(genresString);
+                 //   String insertQuery = "insert into movie(imdbID, title, releaseDate, director, runtime, genre) values(?,?,?,?,?,?);";
+                    //String viewDated = "March 23, 2014";
+                    data.add(new Movie(currLine[0], title, relDate,dir, rnTm, genresString));
+                    String insertQuery = "insert into movie(viewDate, imdbID, title, releaseDate, director, runtime, genre) values(?,?,?,?,?,?,?);";
+                    try{
+                        sqlConn.prepareInsertMovieQuery(insertQuery, currLine[0], currLine[1], title, relDate, dir, rnTm, genresString);
+                        //Server.showMessage(query);
+                    }
+                    catch(Exception e){
+                       // sqlConn.showMessage("conn line 106"+e.toString());
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (br != null)br.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        catch(Exception e){System.out.println(e.toString());}
+    }    
