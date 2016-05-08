@@ -395,11 +395,11 @@ public class FXMLDocumentController implements Initializable {
         String episodeTitle = getEpisodeTitle(selectedShow.getShowImdbID(), selectedShow.getSeasonNumber(), selectedShow.getEpisodeNumber());
         selectedShow.setEpisodeTitle(episodeTitle);
         showData.add(selectedShow);
-        String insertQuery = "insert into episodeWatched(viewDate, showImdbID, episodeSeason, episodeNumber, episodeTitle, episodeImdbID) values(?,?,?,?,?,?);";
+        String insertQuery = "insert into episodeWatched(viewDate, showImdbID, episodeSeason, episodeNumber, episodeTitle, episodeImdbID, releaseDate, runtime) values(?,?,?,?,?,?,?,?);";
         try{
             sqlConn.prepareInsertEpisodeQuery(insertQuery, selectedShow.getViewDate(), selectedShow.getShowImdbID(), 
                     selectedShow.getSeasonNumber(), selectedShow.getEpisodeNumber(), selectedShow.getEpisodeTitle(), 
-                    selectedShow.getEpisodeImdbID());
+                    selectedShow.getEpisodeImdbID(), selectedShow.getReleaseDate(), selectedShow.getRuntime());
             //Server.showMessage(query);
         }
         catch(Exception e){
@@ -425,12 +425,40 @@ public class FXMLDocumentController implements Initializable {
             episodeTitle = fullString.substring(fullString.indexOf("title=")+7,fullString.indexOf("itemprop=\"name\"")-2);
             String episodeImdbID = fullString.substring(fullString.indexOf("/title/tt")+9,fullString.indexOf("/?"));
             selectedShow.setEpisodeImdbID(episodeImdbID);
+            getEpisodeInfo(episodeImdbID);
             System.out.println(episodeTitle+episodeImdbID);
         }
         catch(Exception e){
             e.printStackTrace();
         }
         return episodeTitle;
+    }
+    
+    public void getEpisodeInfo(String imdbID){
+        try{
+            URL siteURL = new URL("http://www.imdb.com/title/tt"+imdbID);
+            URLConnection yc = siteURL.openConnection();
+        //set the User-Agent value (currently using the Firefox user-agent value)
+            yc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:x.x.x) Gecko/20041107 Firefox/x.x");
+            InputStreamReader isr = new InputStreamReader(yc.getInputStream());
+            BufferedReader reader = new BufferedReader(isr);
+            String fullString = "";
+            for (String line; (line = reader.readLine()) != null;) {
+                fullString+=line;
+            }
+            String movTitle = fullString.substring(fullString.indexOf("<title>"), fullString.indexOf("</title>"));
+            String relDate = movTitle.substring(movTitle.lastIndexOf(")")-4, movTitle.lastIndexOf(")"));
+            fullString = fullString.substring(fullString.indexOf("<time itemprop=\"duration\" datetime=\""));
+            String rnTm = fullString.substring(fullString.indexOf("itemprop=\"duration\" datetime=\"")+32, fullString.indexOf("M"));
+            
+            selectedShow.setRuntime(rnTm);
+            selectedShow.setReleaseDate(relDate);
+        }
+        catch(Exception e){
+            //System.out.println(img);
+            e.printStackTrace();
+            //System.out.println(count);
+        }
     }
     
     @Override
@@ -468,11 +496,19 @@ public class FXMLDocumentController implements Initializable {
         epTitle.setMinWidth(300);
         epTitle.setCellValueFactory(new PropertyValueFactory<Show, String>("episodeTitle"));
         
+        TableColumn releaseDt = new TableColumn("Release Date");
+        releaseDt.setMinWidth(300);
+        releaseDt.setCellValueFactory(new PropertyValueFactory<Show, String>("releaseDate"));
+        
+        TableColumn runtime = new TableColumn("Runtime");
+        runtime.setMinWidth(300);
+        runtime.setCellValueFactory(new PropertyValueFactory<Show, String>("runtime"));
+        
         showTable.setItems(showData);
-        showTable.getColumns().addAll(viewDate, showTitle, seasonNumber, episodeNumber, epTitle);
+        showTable.getColumns().addAll(viewDate, showTitle, seasonNumber, episodeNumber, epTitle, releaseDt, runtime);
         showTableView.getChildren().addAll(showTable);
         try{
-            String query = "select e.viewDate, s.title, e.episodeSeason, e.episodeNumber, e.episodeTitle from episodeWatched e inner join tvShow s on e.showImdbID=s.showImdbID order by viewDate;";
+            String query = "select e.viewDate, s.title, e.episodeSeason, e.episodeNumber, e.episodeTitle, e.releaseDate, e.runtime from episodeWatched e inner join tvShow s on e.showImdbID=s.showImdbID order by viewDate;";
             ResultSet rs = sqlConn.selectQuery(query);
             while(rs.next()){
                 DateFormat format = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
@@ -481,7 +517,9 @@ public class FXMLDocumentController implements Initializable {
                 int epSeason = rs.getInt("episodeSeason");
                 int epNumber = rs.getInt("episodeNumber");
                 String episodeTitle = rs.getString("episodeTitle");
-                showData.add(new Show(viewDt, shwTitle, Integer.toString(epSeason), Integer.toString(epNumber), episodeTitle));
+                String relDt = rs.getString("releaseDate");
+                String rnTm = rs.getString("runtime");
+                showData.add(new Show(viewDt, shwTitle, Integer.toString(epSeason), Integer.toString(epNumber), episodeTitle, relDt, rnTm));
             }
         }
         catch(Exception e){System.out.println("line 284"+e.toString());}

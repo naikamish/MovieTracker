@@ -19,8 +19,10 @@ public class Show {
     private final SimpleStringProperty showImdbID;
     private final SimpleStringProperty episodeTitle;
     private final SimpleStringProperty episodeImdbID;
+    private final SimpleStringProperty runtime;
+    private final SimpleStringProperty releaseDate;
     
-    public Show(String viewDate, String showTitle, String seasonNumber, String episodeNumber, String showImdbID, String episodeTitle, String episodeImdbID){
+    public Show(String viewDate, String showTitle, String seasonNumber, String episodeNumber, String showImdbID, String episodeTitle, String episodeImdbID, String runtime, String releaseDate){
         this.viewDate = new SimpleStringProperty(viewDate);
         this.showTitle = new SimpleStringProperty(showTitle);
         this.seasonNumber = new SimpleStringProperty(seasonNumber);
@@ -28,9 +30,11 @@ public class Show {
         this.showImdbID = new SimpleStringProperty(showImdbID);
         this.episodeTitle = new SimpleStringProperty(episodeTitle);
         this.episodeImdbID = new SimpleStringProperty(episodeImdbID);
+        this.runtime = new SimpleStringProperty(runtime);
+        this.releaseDate = new SimpleStringProperty(releaseDate);
     }
     
-    public Show(String viewDate, String showTitle, String seasonNumber, String episodeNumber, String episodeTitle){
+    public Show(String viewDate, String showTitle, String seasonNumber, String episodeNumber, String episodeTitle, String releaseDate, String runtime){
         this.viewDate = new SimpleStringProperty(viewDate);
         this.showTitle = new SimpleStringProperty(showTitle);
         this.seasonNumber = new SimpleStringProperty(seasonNumber);
@@ -38,6 +42,8 @@ public class Show {
         this.showImdbID = new SimpleStringProperty("");
         this.episodeTitle = new SimpleStringProperty(episodeTitle);
         this.episodeImdbID = new SimpleStringProperty("");
+        this.runtime = new SimpleStringProperty(runtime);
+        this.releaseDate = new SimpleStringProperty(releaseDate);
     }
     
     public Show(String showTitle, String showImdbID){
@@ -48,6 +54,8 @@ public class Show {
         this.showImdbID = new SimpleStringProperty(showImdbID);
         this.episodeTitle = new SimpleStringProperty("");
         this.episodeImdbID = new SimpleStringProperty("");
+        this.runtime = new SimpleStringProperty("");
+        this.releaseDate = new SimpleStringProperty("");
     }
     
     public void setViewDate(String viewDate){
@@ -104,5 +112,21 @@ public class Show {
     
     public String getEpisodeImdbID(){
         return episodeImdbID.get();
+    }
+    
+    public void setRuntime(String runtime){
+        this.runtime.set(runtime);
+    }
+    
+    public String getRuntime(){
+        return runtime.get();
+    }
+    
+    public void setReleaseDate(String releaseDate){
+        this.releaseDate.set(releaseDate);
+    }
+    
+    public String getReleaseDate(){
+        return releaseDate.get();
     }
 }

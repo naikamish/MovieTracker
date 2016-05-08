@@ -88,7 +88,7 @@ public class LoadDriver {
         }
     }
     
-    public void prepareInsertEpisodeQuery(String insertQuery, String viewDate, String imdbID, String season, String episode, String title, String episodeImdbID){
+    public void prepareInsertEpisodeQuery(String insertQuery, String viewDate, String imdbID, String season, String episode, String title, String episodeImdbID, String releaseDate, String runtime){
         try{
             PreparedStatement pstmt = conn.prepareStatement(insertQuery,Statement.RETURN_GENERATED_KEYS);
             String string = viewDate;
@@ -100,6 +100,8 @@ public class LoadDriver {
             pstmt.setString(4, episode);
             pstmt.setString(5, title);
             pstmt.setString(6, episodeImdbID);
+            pstmt.setString(7, releaseDate);
+            pstmt.setString(8, runtime);
             pstmt.execute();
         }
         catch(Exception e){
