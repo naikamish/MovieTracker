@@ -88,6 +88,38 @@ public class LoadDriver {
         }
     }
     
+    public void prepareInsertEpisodeQuery(String insertQuery, String viewDate, String imdbID, String season, String episode, String title, String episodeImdbID){
+        try{
+            PreparedStatement pstmt = conn.prepareStatement(insertQuery,Statement.RETURN_GENERATED_KEYS);
+            String string = viewDate;
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            Date date = format.parse(string);
+            pstmt.setDate(1, new java.sql.Date(date.getTime()));
+            pstmt.setString(2, imdbID);
+            pstmt.setString(3, season);
+            pstmt.setString(4, episode);
+            pstmt.setString(5, title);
+            pstmt.setString(6, episodeImdbID);
+            pstmt.execute();
+        }
+        catch(Exception e){
+            System.out.println(e.toString());
+        }
+    }
+    
+    public void prepareInsertShowQuery(String insertQuery, String title, String imdbID, String genresString){
+        try{
+            PreparedStatement pstmt = conn.prepareStatement(insertQuery,Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, title);
+            pstmt.setString(2, imdbID);
+            pstmt.setString(3, genresString);
+            pstmt.execute();
+        }
+        catch(Exception e){
+            System.out.println(e.toString());
+        }
+    }
+    
     public int insertQueryReturnKey(String query, String groupName, int groupID, String fileName){
         try{
             PreparedStatement pstmt = conn.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
